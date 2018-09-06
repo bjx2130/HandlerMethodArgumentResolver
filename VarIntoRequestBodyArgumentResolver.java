@@ -34,14 +34,16 @@ public class VarIntoRequestBodyArgumentResolver implements HandlerMethodArgument
 	
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
-		return parameter.hasParameterAnnotation(VarIntoRequestBody.class);	
+		
+        return RequestParamVO.class.isAssignableFrom(parameter.getParameterType());
 	}
 
 	@Override
 	public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
 			NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 		
-		Map<String,String> uriTemplateVariables = (Map<String, String>)webRequest.getAttribute("org.springframework.web.servlet.HandlerMapping.uriTemplateVariables", RequestAttributes.SCOPE_REQUEST);
+		@SuppressWarnings({ "unchecked"})
+		Map<String,Object> uriTemplateVariables = (Map)webRequest.getAttribute("org.springframework.web.servlet.HandlerMapping.uriTemplateVariables", RequestAttributes.SCOPE_REQUEST);
 		Map<String,String[]> paramVariables = webRequest.getParameterMap();
 		HttpServletRequest request  = webRequest.getNativeRequest(HttpServletRequest.class);
 		BufferedReader br = new BufferedReader( new InputStreamReader(request.getInputStream()));
@@ -54,8 +56,8 @@ public class VarIntoRequestBodyArgumentResolver implements HandlerMethodArgument
 		
 		Class<?> clazz = parameter.getParameterType();
 		Object target = this.objectMapper.readValue(httpBody.toString(), clazz);
-		Iterator<Entry<String, String>> pathVarIter = uriTemplateVariables.entrySet().iterator();
-		Entry<String, String> ent = null;
+		Iterator<Entry<String, Object>> pathVarIter = uriTemplateVariables.entrySet().iterator();
+		Entry<String, Object> ent = null;
 		Method method = null;
 		Field fd = null;
 		while(pathVarIter.hasNext()){
@@ -73,7 +75,7 @@ public class VarIntoRequestBodyArgumentResolver implements HandlerMethodArgument
 	}
 	
 	
-	public static String captureName(String name) {
+	public  String captureName(String name) {
        return  name.substring(0, 1).toUpperCase() + name.substring(1);
     }
 }
